@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Variable Speed Compressor</title>
+</head>
+<body>
+    <h1>Variable Speed Compressor</h1>
+    <form method="POST">
+        <label>Suction Temperature:</label><br>
+        <input type="number" name="suction_temp" step="any" required><br><br>
+
+        <label>Discharge Temperature:</label><br>
+        <input type="number" name="discharge_temp" step="any" required><br><br>
+
+        <label>Frequency (Hz):</label><br>
+        <input type="number" name="frequency" step="any" required><br><br>
+
+        <input type="submit" value="Generate Coefficients">
+    </form>
+
+    {% if result %}
+        <h2>{{ result }}</h2>
+    {% endif %}
+
+    <br>
+    <a href="/">← Back to Start</a>
+</body>
+</html>

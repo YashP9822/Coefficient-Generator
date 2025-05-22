@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coefficient Generator - Fixed Speed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #bbdefb 0%, #e3f2fd 100%);
+      position: relative;
+      min-height: 100vh;
+      padding: 30px;
+      overflow-x: hidden;
+    }
+
+    .wave {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 250px;
+      background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%230d47a1" fill-opacity="1" d="M0,96L60,106.7C120,117,240,139,360,144C480,149,600,139,720,128C840,117,960,107,1080,128C1200,149,1320,203,1380,229.3L1440,256L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"></path></svg>') no-repeat;
+      background-size: cover;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      max-width: 600px;
+      margin: 80px auto 0;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      z-index: 1;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #0d47a1;
+    }
+
+    h1 { font-size: 28px; margin-bottom: 10px; }
+    h2 { font-size: 22px; margin-top: 0; margin-bottom: 30px; }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: bold;
+      color: #0d47a1;
+    }
+
+    select, input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    input[type="submit"] {
+      background-color: #0d47a1;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #1565c0;
+    }
+
+    .success-message {
+      text-align: center;
+      color: green;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .spinner {
+      text-align: center;
+      display: none;
+      margin-top: 10px;
+    }
+
+    .spinner div {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0d47a1;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wave"></div>
+
+  <div class="container">
+    <h1><strong>Coefficient Generator</strong></h1>
+    <h2>Fixed Speed</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+      <label for="temp_unit">Temperature Unit:</label>
+      <select id="temp_unit" name="temp_unit">
+        <option value="degF" {% if temp_unit == 'degF' %}selected{% endif %}>°F</option>
+        <option value="degC" {% if temp_unit == 'degC' %}selected{% endif %}>°C</option>
+      </select>
+
+      <label for="capacity_unit">Capacity Unit:</label>
+      <select id="capacity_unit" name="capacity_unit">
+        <option value="BTU/hr" {% if capacity_unit == 'BTU/hr' %}selected{% endif %}>BTU/hr</option>
+        <option value="W" {% if capacity_unit == 'W' %}selected{% endif %}>W</option>
+      </select>
+
+      <label for="power_unit">Power Unit:</label>
+      <select id="power_unit" name="power_unit" disabled>
+        <option value="W" selected>W</option>
+      </select>
+
+      <label for="massflow_unit">Mass Flow Rate Unit:</label>
+      <select id="massflow_unit" name="massflow_unit">
+        <option value="lb/hr" {% if massflow_unit == 'lb/hr' %}selected{% endif %}>lb/hr</option>
+        <option value="kg/hr" {% if massflow_unit == 'kg/hr' %}selected{% endif %}>kg/hr</option>
+      </select>
+
+      <a href="{{ url_for('static', filename='fixed_speed_template.xlsm') }}" 
+         download 
+         style="display:block;margin-bottom:20px;color:#0d47a1;font-weight:bold;">
+        📥 Download Excel Template
+      </a>
+
+      <label for="data_file">Import Data File (CSV or Excel):</label>
+      <input type="file" id="data_file" name="data_file" accept=".csv, .xlsm" required />
+
+      <input type="submit" name="upload" value="Upload File">
+    </form>
+
+    {% if file_uploaded %}
+      <p class="success-message">✅ File uploaded successfully!</p>
+
+      <form method="POST" onsubmit="showSpinner()">
+        <input type="hidden" name="continue_flag" value="yes">
+        <input type="hidden" name="temp_unit" value="{{ session['temp_unit'] }}">
+        <input type="hidden" name="capacity_unit" value="{{ session['capacity_unit'] }}">
+        <input type="hidden" name="power_unit" value="{{ session['power_unit'] }}">
+        <input type="hidden" name="massflow_unit" value="{{ session['massflow_unit'] }}">
+        <input type="submit" value="Continue to Results">
+
+        <div class="spinner" id="loadingSpinner">
+          <div></div>
+          <p style="margin-top: 8px; font-size: 14px; color: #0d47a1;">Processing, please wait...</p>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+
+  <script>
+    function showSpinner() {
+      document.querySelector('input[type="submit"][value="Continue to Results"]').disabled = true;
+      document.getElementById('loadingSpinner').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

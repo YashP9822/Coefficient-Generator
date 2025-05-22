@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coefficient Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #e1f5fe);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px 50px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #00796b;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .radio-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .radio-group input {
+            margin-right: 10px;
+        }
+
+        .radio-group label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-group label:hover {
+            color: #00796b;
+        }
+
+        input[type="submit"] {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #004d40;
+        }
+
+        .result {
+            margin-top: 20px;
+            color: #00796b;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Coefficient Generator</h1>
+        <form method="POST">
+            <label>Select Compressor Type:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="compressor_type" value="Fixed Speed" required> Fixed Speed</label>
+                <label><input type="radio" name="compressor_type" value="Variable Speed"> Variable Speed</label>
+            </div>
+            <input type="submit" value="Next">
+        </form>
+
+        {% if selected_type %}
+            <div class="result">
+                You selected: {{ selected_type }}
+            </div>
+        {% endif %}
+
+        <div class="footer">
+            Created by Yash Pathade
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>10 Coefficients</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #d7edff, #f3faff);
+      min-height: 100vh;
+    }
+
+    .page-header {
+      background-color: #0d47a1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      padding: 60px 20px 40px;
+      text-align: center;
+      color: white;
+    }
+
+    .page-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .page-header h2 {
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .card-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .table th {
+      background-color: #0d47a1;
+      color: white;
+      text-align: center;
+    }
+
+    .table td {
+      text-align: center;
+      vertical-align: middle;
+      font-size: 15px;
+    }
+
+    .btn-custom {
+      padding: 10px 22px;
+      font-size: 16px;
+      border-radius: 6px;
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .actions {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .btn-success {
+      background-color: #00b386;
+      border: none;
+    }
+
+    .btn-success:hover {
+      background-color: #009973;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <h1>Coefficient Generator</h1>
+  <h2>Fixed Speed – 10 Coefficients</h2>
+</div>
+
+<!-- MAIN CARD -->
+<div class="card-container">
+  {% if coefficients %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Coefficient Term</th>
+          <th>Capacity Table</th>
+          <th>Power Table</th>
+          <th>Mass Flow Rate Table</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in range(coefficients['Term']|length) %}
+        <tr>
+          <td><strong>{{ coefficients['Term'][i] }}</strong></td>
+          <td>{{ coefficients['Capacity Table'][i]|round(4) }}</td>
+          <td>{{ coefficients['Power Table'][i]|round(4) }}</td>
+          <td>{{ coefficients['Mass Flow Rate Table'][i]|round(4) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-warning text-center">
+    No coefficients found to display.
+  </div>
+  {% endif %}
+
+  <div class="actions">
+    <a href="{{ url_for('download_excel') }}" class="btn btn-success btn-custom btn-icon me-2">
+      📥 <span>Download Excel</span>
+    </a>
+    <a href="/fixed" class="btn btn-secondary btn-custom me-2">⬅ Back to Upload</a>
+    <a href="/" class="btn btn-primary btn-custom">🏠 Home</a>
+  </div>
+</div>
+
+<!-- Performance Calculator -->
+<div class="container my-5 p-4 shadow rounded bg-white">
+  <h3 class="text-center mb-4 text-primary fw-bold">Performance Calculator</h3>
+
+    <div class="row justify-content-center mb-3">
+    <div class="col-md-4">
+        <label for="Te" class="form-label">Evaporator Temp (Te)</label>
+        <div class="input-group">
+        <input type="number" class="form-control" id="Te" placeholder="e.g. 20">
+        <span class="input-group-text">°F</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <label for="Tc" class="form-label">Condenser Temp (Tc)</label>
+        <div class="input-group">
+        <input type="number" class="form-control" id="Tc" placeholder="e.g. 130">
+        <span class="input-group-text">°F</span>
+        </div>
+    </div>
+    </div>
+
+  <div class="row text-center mt-4">
+    <div class="col-md-4">
+      <h5 class="text-muted">Capacity</h5>
+      <div class="fs-4 fw-bold text-dark">
+        <span id="capacity_result">—</span>
+        <small class="text-secondary">BTU/hr</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h5 class="text-muted">Power</h5>
+      <div class="fs-4 fw-bold text-dark">
+        <span id="power_result">—</span>
+        <small class="text-secondary">W</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h5 class="text-muted">Mass Flow Rate</h5>
+      <div class="fs-4 fw-bold text-dark">
+        <span id="massflow_result">—</span>
+        <small class="text-secondary">lb/hr</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const coefficients = {{ coefficients|tojson }};
+</script>
+<script>
+  // coefficients is already passed from backend via Jinja as a global variable:
+  // const coefficients = {{ coefficients|tojson }} — assumed already present above this script.
+
+  // Extract sub-coefficients once
+  const capCoeff = coefficients["Capacity Table"];
+  const powCoeff = coefficients["Power Table"];
+  const massCoeff = coefficients["Mass Flow Rate Table"];
+
+  // Function to compute polynomial result
+  function calc(coeffs, Te, Tc) {
+    const Te2 = Te ** 2;
+    const Tc2 = Tc ** 2;
+    return coeffs[0] +
+           coeffs[1] * Te +
+           coeffs[2] * Tc +
+           coeffs[3] * Te2 +
+           coeffs[4] * Te * Tc +
+           coeffs[5] * Tc2 +
+           coeffs[6] * Te ** 3 +
+           coeffs[7] * Te2 * Tc +
+           coeffs[8] * Te * Tc2 +
+           coeffs[9] * Tc ** 3;
+  }
+
+  // Update results on input change
+  function updateResults() {
+    const Te = parseFloat(document.getElementById("Te").value);
+    const Tc = parseFloat(document.getElementById("Tc").value);
+
+    if (!isNaN(Te) && !isNaN(Tc)) {
+      document.getElementById("capacity_result").innerText = calc(capCoeff, Te, Tc).toFixed(2);
+      document.getElementById("power_result").innerText = calc(powCoeff, Te, Tc).toFixed(2);
+      document.getElementById("massflow_result").innerText = calc(massCoeff, Te, Tc).toFixed(2);
+    } else {
+      document.getElementById("capacity_result").innerText = '—';
+      document.getElementById("power_result").innerText = '—';
+      document.getElementById("massflow_result").innerText = '—';
+    }
+  }
+
+  // Event listeners for live updates
+  document.getElementById("Te").addEventListener("input", updateResults);
+  document.getElementById("Tc").addEventListener("input", updateResults);
+</script>
+
+
+</body>
+</html>
